@@ -2,19 +2,17 @@
 
 import sys
 
-input = sys.argv[1]
+def get_gene_lengths(fh_in, fh_out):
+    genes = {}
 
-genes = {} # empty list
+    gene_name = ""
+    for line in fh_in:
+        line = line.strip()
+        if line[0] == ">":
+            gene_name = line[1:]
+            genes[gene_name] = 0
+        elif gene_name != "":
+            genes[gene_name] += len(line)
 
-with open(input, "rU") as fh_in:
-	for line in fh_in:
-		line = line.strip()
-		if line[0] == ">":
-			gene_names = line
-			genes[gene_names] = ''
-		else:
-			genes[gene_names]+=line
-
-for (name,val) in genes.items():
-    val = len(val)
-    print(name[1:] + "\t" + str(val)) 
+    for (name,val) in genes.items():
+        print >>fh_out, "{0}\t{1}".format(name, val)

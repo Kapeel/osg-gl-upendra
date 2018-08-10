@@ -11,6 +11,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import re
 
 # The name of the configuration file.
 config_file = "config.json"
@@ -107,12 +108,17 @@ def download_files(ticket_list_path):
         for ticket, src in tlr:
             download_file(ticket, src)
 
-# Run the word count job.
+# Run the gene length job.
+from get_gene_length_filter import get_gene_lengths
 def run_job(arguments, output_filename, error_filename):
     with open(output_filename, "w") as out, open(error_filename, "w") as err:
-        rc = subprocess.call(["get_gene_length_filter.py"] + arguments, stdout=out, stderr=err)
-        if rc != 0:
-            raise Exception("wc returned exit code {0}".format(rc))
+        for input_file in arguments:
+            output_file = re.sub(r"[.][^.]+$", ".txt", input_file)
+            try:
+                with open(input_file, "rU") as fh_in, open(output_file, "w") as fh_out:
+                    get_gene_lengths(fh_in, fh_out)
+            except Exception as e:
+                print >>err, "error processing {0}: {1}".format(input_file, e)
 
 # Upload a file or directory to iRODS.
 def upload_file(ticket, irods_user, owner, src, dest):
