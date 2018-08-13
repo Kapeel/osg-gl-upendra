@@ -13,6 +13,8 @@ import subprocess
 import sys
 import re
 
+from get_gene_length_filter import get_gene_lengths
+
 # The name of the configuration file.
 config_file = "config.json"
 
@@ -109,16 +111,20 @@ def download_files(ticket_list_path):
             download_file(ticket, src)
 
 # Run the gene length job.
-from get_gene_length_filter import get_gene_lengths
 def run_job(arguments, output_filename, error_filename):
+    output_files = []
     with open(output_filename, "w") as out, open(error_filename, "w") as err:
         for input_file in arguments:
             output_file = re.sub(r"[.][^.]+$", ".txt", input_file)
             try:
                 with open(input_file, "rU") as fh_in, open(output_file, "w") as fh_out:
                     get_gene_lengths(fh_in, fh_out)
+                    output_files += [output_file]
             except Exception as e:
-                print >>err, "error processing {0}: {1}".format(input_file, e)
+                msg = "error processing {0}: {1}".format(input_file, e)
+                eprint(msg)
+                raise Exception(msg)
+    return output_files
 
 # Upload a file or directory to iRODS.
 def upload_file(ticket, irods_user, owner, src, dest):
@@ -182,9 +188,10 @@ if __name__ == "__main__":
     job_failed = False
 
     # Run the job.
+    output_files = []
     try:
         updater.running("processing the input files")
-        run_job(cfg.arguments, cfg.stdout, cfg.stderr)
+        output_files = run_job(cfg.arguments, cfg.stdout, cfg.stderr)
     except Exception as e:
         updater.running("job encountered an error: {0}".format(e))
         job_failed = True
@@ -192,7 +199,8 @@ if __name__ == "__main__":
     # Upload the output files.
     try:
         updater.running("uploading the output files")
-        upload_files(cfg.output_ticket_list, cfg.irods_user, cfg.irods_job_user, [cfg.stdout, cfg.stderr], updater)
+        files_to_upload = [cfg.stdout, cfg.stderr] + output_files
+        upload_files(cfg.output_ticket_list, cfg.irods_user, cfg.irods_job_user, files_to_upload, updater)
     except Exception as e:
         updater.running("unable to upload output files: {0}".format(e))
         job_failed = True
