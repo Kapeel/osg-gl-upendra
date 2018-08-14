@@ -3,7 +3,7 @@
 import re
 import sys
 
-from get_gene_length_filter_3 import get_gene_lengths
+from get_gene_length_filter import get_gene_lengths
 
 if __name__ == "__main__":
     for input_file in sys.argv[1:]:
