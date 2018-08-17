@@ -167,3 +167,7 @@ docker run --rm -v ${PWD}:/data -w /data cyverse/osg-gl:1.0
 ```
 
 - Do a PR on OSG [github repo](https://github.com/opensciencegrid/cvmfs-singularity-sync)
+
+- After PR is merged, it takes 1-2 hours for the image to show up in CVFMS and after which you can import the tool and let one of DE team know that it is OSG app (this will change in future)
+
+- Create the app in DE 
